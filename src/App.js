@@ -15,6 +15,8 @@ const TEST_GIFS = [
 const App = () => {
   //state
   const[walletAddress, setWalletAddress] = useState(null);
+  const[inputValue, setInputValue] = useState('');
+  const[gifList, setGifList] = useState([]);
    /*
    * This function holds the logic for deciding if a Phantom Wallet is
    * connected or not
@@ -44,6 +46,21 @@ const App = () => {
    * We will write the logic for this next!
    */
   const connectWallet = async() => {};
+
+  const onInputChange = (event) => {
+    const {value} = event.target;
+    setInputValue(value);
+  }
+
+  const sendGif = async() => {
+    if (inputValue.length > 0){
+      console.log("Gif link:", inputValue);
+      setGifList([...gifList, inputValue]);
+      setInputValue('');
+    } else {
+      console.log("Empty input. Try again.")
+    }
+  }
     /*
    * We want to render this UI when the user hasn't connected
    * their wallet to our app yet.
@@ -55,6 +72,31 @@ const App = () => {
     >
       Connect to Wallet
     </button>
+  );
+  const renderConnectedContainer = () => (
+    <div className="connected-container">
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          sendGif();
+        }}
+      >
+        <input 
+        type='text' 
+        placeholder="Enter gif line!"
+        value={inputValue}
+        onChange={onInputChange}
+        />
+        <button type="submit" className='cta-button submit-gif-button'>Submit</button>
+      </form>
+      <div className='gif-grid'>
+        {gifList.map(gif => (
+          <div className='gif-item' key={gif}>
+            <img src={gif} alt={gif}/>
+          </div>
+        ))}
+      </div>
+    </div>
   );
     /*
    * When our component first mounts, let's check to see if we have a connected
@@ -68,6 +110,15 @@ const App = () => {
     return () => window.removeEventListener('load', onLoad);
   }, []);
 
+  useEffect(() => {
+    if(walletAddress) {
+      console.log('Fetching GIF list...');
+      //call Solana program here
+      //Set state
+      setGifList(TEST_GIFS);
+    }
+  },[walletAddress]);
+
   return (
     <div className="App">
       <div className={walletAddress ? 'authed-container': 'container'}>
@@ -77,6 +128,7 @@ const App = () => {
             View your GIF collection in the metaverse ✨
           </p>
           {!walletAddress && renderNotConnectedContainer()}
+          {walletAddress && renderConnectedContainer()}
         </div>
         <div className="footer-container">
           <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
